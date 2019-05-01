@@ -1,0 +1,14 @@
+[package]
+name = "tpa2016d2"
+version = "0.1.0"
+authors = ["Johan <johan@jott.se>"]
+description = "Embedded-hal driver for the Class-D amplifier TPA2016D2"
+repository = "https://github.com/jkristell/tpa2016d2"
+readme = "README.md"
+edition = "2018"
+keywords = ["tpa2016", "tpa2016d2", "embedded-hal-driver"]
+categories = ["no_std"]
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+embedded-hal = "0.2.2"
