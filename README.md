@@ -21,7 +21,7 @@ use board::hal::prelude::*;
 use board::hal::stm32;
 use board::hal::i2c::I2c;
 
-use tpa2016::Tpa2016;
+use tpa2016d2::Tpa2016d2;
 
 #[entry]
 fn main() -> ! {
@@ -44,7 +44,7 @@ fn main() -> ! {
 
     let i2c = I2c::i2c1(device.I2C1, (scl, sda), 200.khz(), clocks);
 
-    let mut tpa = Tpa2016::new(i2c);
+    let mut tpa = Tpa2016d2::new(i2c);
 
     // Print the registers
     for i in 1..=7 {

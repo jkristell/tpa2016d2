@@ -8,8 +8,8 @@ use regmap::*;
 
 const TPA2016_I2C_ADDR: u8 = 0xB0 >> 1;
 
-/// Representation of a Texas Instruments TPA2016 Audio Amplifier
-pub struct Tpa2016<I2C> {
+/// Representation of a Texas Instruments TPA2016d2 audio amplifier
+pub struct Tpa2016d2<I2C> {
     i2c: I2C,
     regmap: RegisterMap,
 }
@@ -41,18 +41,18 @@ pub enum NoiseGateThreshold {
     Ngt1mV = 0b00,
 }
 
-impl<I2C, E> Tpa2016<I2C>
+impl<I2C, E> Tpa2016d2<I2C>
 where
     I2C: i2c::Write<Error = E> + i2c::WriteRead<Error = E>,
 {
     /// Creates a new device connected through the supplied i2c device
-    pub fn new(i2c: I2C) -> Tpa2016<I2C> {
+    pub fn new(i2c: I2C) -> Tpa2016d2<I2C> {
         let regmap = RegisterMap::default();
 
-        Tpa2016 { i2c, regmap }
+        Tpa2016d2 { i2c, regmap }
     }
 
-    /// Consumes the device and releases the i2c device
+    /// Consume the device and release the i2c device
     pub fn release(self) -> I2C {
         self.i2c
     }
@@ -98,7 +98,7 @@ where
         self.write_reg_idx(1)
     }
 
-    /// Sets the Volume
+    /// Set the gain
     pub fn gain(&mut self, gain: u8) -> Result<(), E> {
         self.regmap.fixedGain.set(gain);
         self.write_reg_idx(5)
