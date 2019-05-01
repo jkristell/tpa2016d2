@@ -7,7 +7,7 @@ repository = "https://github.com/jkristell/tpa2016d2"
 readme = "README.md"
 edition = "2018"
 keywords = ["tpa2016", "tpa2016d2", "embedded-hal-driver"]
-categories = ["no_std"]
+categories = ["no_std", "embedded"]
 license = "MIT OR Apache-2.0"
 
 [dependencies]
