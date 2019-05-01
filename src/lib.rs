@@ -37,22 +37,19 @@ pub enum CompressionRatio {
 pub enum NoiseGateThreshold {
     Ngt20mV = 0b11,
     Ngt10mV = 0b10,
-    Ngt4mV  = 0b01,
-    Ngt1mV  = 0b00,
+    Ngt4mV = 0b01,
+    Ngt1mV = 0b00,
 }
 
 impl<I2C, E> Tpa2016<I2C>
-where 
+where
     I2C: i2c::Write<Error = E> + i2c::WriteRead<Error = E>,
 {
     /// Creates a new device connected through the supplied i2c device
     pub fn new(i2c: I2C) -> Tpa2016<I2C> {
         let regmap = RegisterMap::default();
 
-        Tpa2016 {
-            i2c,
-            regmap,
-        }
+        Tpa2016 { i2c, regmap }
     }
 
     /// Consumes the device and releases the i2c device
@@ -66,7 +63,7 @@ where
     }
 
     /// Enable or disable speakers
-    pub fn speaker_enable(&mut self, le: bool, re: bool)  -> Result<(), E> {
+    pub fn speaker_enable(&mut self, le: bool, re: bool) -> Result<(), E> {
         let cur = self.read_reg(1)?;
         self.regmap.reg1.update(cur);
         self.regmap.reg1.SPK_EN_L = le;
@@ -87,14 +84,14 @@ where
 
     /// Shutdown the device
     /// Control, Bias and Oscillators are disabled
-    pub fn disable_device(&mut self)  -> Result<(), E> {
+    pub fn disable_device(&mut self) -> Result<(), E> {
         let cur = self.read_reg(1)?;
         self.regmap.reg1.update(cur);
         self.regmap.reg1.SWS = true;
         self.write_reg_idx(1)
     }
 
-    pub fn noise_gate(&mut self, enable: bool)  -> Result<(), E> {
+    pub fn noise_gate(&mut self, enable: bool) -> Result<(), E> {
         let cur = self.read_reg(1)?;
         self.regmap.reg1.update(cur);
         self.regmap.reg1.NG_EN = enable;
@@ -102,7 +99,7 @@ where
     }
 
     /// Sets the Volume
-    pub fn gain(&mut self, gain: u8)  -> Result<(), E> {
+    pub fn gain(&mut self, gain: u8) -> Result<(), E> {
         self.regmap.fixedGain.set(gain);
         self.write_reg_idx(5)
     }
@@ -132,7 +129,7 @@ where
         self.write_reg_idx(5)
     }
 
-    pub fn noise_gate_threshold(&mut self, val: NoiseGateThreshold)  -> Result<(), E> {
+    pub fn noise_gate_threshold(&mut self, val: NoiseGateThreshold) -> Result<(), E> {
         let cur = self.read_reg(6)?;
         self.regmap.reg6.update(cur);
         self.regmap.reg6.noise_gate_threshold = val as u8;
@@ -164,9 +161,10 @@ where
         }
 
         let mut regbuf = [0u8; 1];
-        self.i2c.write_read(TPA2016_I2C_ADDR, &[regidx], &mut regbuf)?;
+        self.i2c
+            .write_read(TPA2016_I2C_ADDR, &[regidx], &mut regbuf)?;
 
-        return Ok(regbuf[0]);
+        Ok(regbuf[0])
     }
 
     fn write_reg(&mut self, regaddr: u8, value: u8) -> Result<(), E> {
@@ -174,7 +172,6 @@ where
         self.i2c.write(TPA2016_I2C_ADDR, &regbuf)
     }
 }
-
 
 #[cfg(test)]
 mod tests {

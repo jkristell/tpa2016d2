@@ -1,4 +1,3 @@
-
 pub trait RegisterMapRegister {
     fn as_byte(&self) -> u8;
     fn update(&mut self, val: u8);
@@ -42,13 +41,13 @@ impl RegisterMapRegister for Register1 {
         if self.SWS {
             r |= 1 << 5;
         }
-        if self.FAULT_R  {
+        if self.FAULT_R {
             r |= 1 << 4;
         }
         if self.FAULT_L {
             r |= 1 << 3;
         }
-        if self.Thermal  {
+        if self.Thermal {
             r |= 1 << 2;
         }
         // Bit 1 should always be 1
@@ -154,18 +153,16 @@ impl RegisterMapRegister for Register7 {
     }
 }
 
-
 #[allow(non_snake_case)]
 pub struct RegisterMap {
     pub reg1: Register1,
-    pub atk_time: U6Register,   // reg2
-    pub rel_time: U6Register,   // reg3
-    pub hold_time: U6Register,  // reg4
-    pub fixedGain: U6Register,  // reg5
+    pub atk_time: U6Register,  // reg2
+    pub rel_time: U6Register,  // reg3
+    pub hold_time: U6Register, // reg4
+    pub fixedGain: U6Register, // reg5
     pub reg6: Register6,
     pub reg7: Register7,
 }
-
 
 impl Default for RegisterMap {
     fn default() -> Self {
@@ -195,4 +192,3 @@ impl RegisterMap {
         }
     }
 }
-
