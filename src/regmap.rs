@@ -1,6 +1,7 @@
 
-trait AsByte {
+pub trait RegisterMapRegister {
     fn as_byte(&self) -> u8;
+    fn update(&mut self, val: u8);
 }
 
 #[allow(non_snake_case)]
@@ -12,19 +13,6 @@ pub struct Register1 {
     pub FAULT_L: bool,
     pub Thermal: bool,
     pub NG_EN: bool,
-}
-
-impl Register1 {
-    pub fn update_from(&mut self, new: u8) {
-        self.SPK_EN_R = new & 1 << 7 != 0;
-        self.SPK_EN_L = new & 1 << 6 != 0;
-        self.SWS = new & 1 << 5 != 0;
-        self.FAULT_R = new & 1 << 4 != 0;
-        self.FAULT_L = new & 1 << 3 != 0;
-        self.Thermal = new & 1 << 2 != 0;
-        // Reserved
-        self.NG_EN = new & 1 != 0;
-    }
 }
 
 impl Default for Register1 {
@@ -41,7 +29,7 @@ impl Default for Register1 {
     }
 }
 
-impl AsByte for Register1 {
+impl RegisterMapRegister for Register1 {
     fn as_byte(&self) -> u8 {
         let mut r = 0;
 
@@ -71,6 +59,17 @@ impl AsByte for Register1 {
 
         r
     }
+
+    fn update(&mut self, new: u8) {
+        self.SPK_EN_R = new & 1 << 7 != 0;
+        self.SPK_EN_L = new & 1 << 6 != 0;
+        self.SWS = new & 1 << 5 != 0;
+        self.FAULT_R = new & 1 << 4 != 0;
+        self.FAULT_L = new & 1 << 3 != 0;
+        self.Thermal = new & 1 << 2 != 0;
+        // Reserved
+        self.NG_EN = new & 1 != 0;
+    }
 }
 
 pub struct U6Register(u8);
@@ -81,9 +80,13 @@ impl U6Register {
     }
 }
 
-impl AsByte for U6Register {
+impl RegisterMapRegister for U6Register {
     fn as_byte(&self) -> u8 {
         self.0 & 0x3F
+    }
+
+    fn update(&mut self, val: u8) {
+        self.0 = val & 0x3F;
     }
 }
 
@@ -103,7 +106,7 @@ impl Default for Register6 {
     }
 }
 
-impl AsByte for Register6 {
+impl RegisterMapRegister for Register6 {
     fn as_byte(&self) -> u8 {
         let mut r = 0;
 
@@ -114,6 +117,12 @@ impl AsByte for Register6 {
         r |= (self.noise_gate_threshold & 0b11) << 5;
         r |= self.output_limiter_level & 0b11111;
         r
+    }
+
+    fn update(&mut self, val: u8) {
+        self.output_limiter_disable = val & 1 << 7 != 0;
+        self.noise_gate_threshold = (val >> 5) & 0b11;
+        self.output_limiter_level = val & 0b11111;
     }
 }
 
@@ -131,12 +140,17 @@ impl Default for Register7 {
     }
 }
 
-impl AsByte for Register7 {
+impl RegisterMapRegister for Register7 {
     fn as_byte(&self) -> u8 {
         // Gain
         (self.max_gain & 0b1111) << 4 |
         // Compression radio
         (self.compression_ratio & 0b11)
+    }
+
+    fn update(&mut self, val: u8) {
+        self.max_gain = val >> 4;
+        self.compression_ratio = val & 0b11;
     }
 }
 

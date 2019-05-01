@@ -67,15 +67,16 @@ where
 
     /// Enable or disable speakers
     pub fn speaker_enable(&mut self, le: bool, re: bool)  -> Result<(), E> {
+        let cur = self.read_reg(1)?;
+        self.regmap.reg1.update(cur);
         self.regmap.reg1.SPK_EN_L = le;
         self.regmap.reg1.SPK_EN_R = re;
-        let b = self.regmap.reg_as_byte(1);
-        self.write_reg(1, b)
+        self.write_reg_idx(1)
     }
 
     pub fn get_faults(&mut self) -> Result<Faults, E> {
-        let v = self.read_reg(1)?;
-        self.regmap.reg1.update_from(v);
+        let cur = self.read_reg(1)?;
+        self.regmap.reg1.update(cur);
 
         Ok(Faults {
             fault_r: self.regmap.reg1.FAULT_R,
@@ -87,11 +88,15 @@ where
     /// Shutdown the device
     /// Control, Bias and Oscillators are disabled
     pub fn disable_device(&mut self)  -> Result<(), E> {
+        let cur = self.read_reg(1)?;
+        self.regmap.reg1.update(cur);
         self.regmap.reg1.SWS = true;
         self.write_reg_idx(1)
     }
 
     pub fn noise_gate(&mut self, enable: bool)  -> Result<(), E> {
+        let cur = self.read_reg(1)?;
+        self.regmap.reg1.update(cur);
         self.regmap.reg1.NG_EN = enable;
         self.write_reg_idx(1)
     }
@@ -128,16 +133,22 @@ where
     }
 
     pub fn noise_gate_threshold(&mut self, val: NoiseGateThreshold)  -> Result<(), E> {
+        let cur = self.read_reg(6)?;
+        self.regmap.reg6.update(cur);
         self.regmap.reg6.noise_gate_threshold = val as u8;
         self.write_reg_idx(6)
     }
 
     pub fn output_limiter_level(&mut self, val: u8) -> Result<(), E> {
+        let cur = self.read_reg(6)?;
+        self.regmap.reg6.update(cur);
         self.regmap.reg6.output_limiter_level = val;
         self.write_reg_idx(6)
     }
 
     pub fn compression_ratio(&mut self, ratio: CompressionRatio) -> Result<(), E> {
+        let cur = self.read_reg(7)?;
+        self.regmap.reg7.update(cur);
         self.regmap.reg7.compression_ratio = ratio as u8;
         self.write_reg_idx(7)
     }
