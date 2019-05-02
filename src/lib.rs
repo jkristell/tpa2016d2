@@ -41,6 +41,16 @@ pub enum NoiseGateThreshold {
     Ngt1mV = 0b00,
 }
 
+/// Automatic Gain Control Presets
+pub enum AgcPreset {
+    Pop,
+    Classical,
+    Jazz,
+    Rap,
+    Rock,
+    Voice,
+}
+
 impl<I2C, E> Tpa2016d2<I2C>
 where
     I2C: i2c::Write<Error = E> + i2c::WriteRead<Error = E>,
@@ -149,6 +159,29 @@ where
         self.regmap.reg7.compression_ratio = ratio as u8;
         self.write_reg_idx(7)
     }
+
+      pub fn set_agc(&mut self, preset: AgcPreset) -> Result<(), E> {
+        use AgcPreset::*;
+        let (cr, atk, rel_time, hold_time, gain, limiter) = match preset {
+            Pop => {
+                (CompressionRatio::Ratio4, 1280, 986, 137, 6, 0b11_1100)
+                // 5:1, 1.28-3.84
+            },
+            _ => (CompressionRatio::Ratio2, 0, 0, 0, 0, 0),
+            /*
+            Classical => {},
+            Jazz => {},
+            Rap => {},
+            Rock => {},
+            Voice => {},
+            */
+        };
+
+        Ok(())
+    }
+
+
+
 
     fn write_reg_idx(&mut self, idx: usize) -> Result<(), E> {
         let b = self.regmap.reg_as_byte(idx);
