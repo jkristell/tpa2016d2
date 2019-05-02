@@ -1,8 +1,8 @@
 [package]
 name = "tpa2016d2"
 version = "0.1.1"
-authors = ["Johan <johan@jott.se>"]
-description = "Embedded-hal driver for the Class-D amplifier TPA2016D2"
+authors = ["Johan Kristell <johan@jott.se>"]
+description = "Embedded-hal driver for the Texas Instruments TPA2016D2 Class-D amplifier"
 repository = "https://github.com/jkristell/tpa2016d2"
 readme = "README.md"
 edition = "2018"
