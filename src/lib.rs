@@ -71,7 +71,6 @@ where
         self.read_reg(idx)
     }
 
-
     /// Enable or disable speakers
     pub fn speaker_enable(&mut self, le: bool, re: bool) -> Result<(), E> {
         self.regmap.reg1.SPK_EN_L = le;
