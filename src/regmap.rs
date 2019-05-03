@@ -191,4 +191,17 @@ impl RegisterMap {
             _ => 0,
         }
     }
+
+    pub fn update_map(&mut self, idx: u8, val: u8) {
+        match idx {
+            1 => self.reg1.update(val),
+            2 => self.atk_time.update(val),
+            3 => self.rel_time.update(val),
+            4 => self.hold_time.update(val),
+            5 => self.fixedGain.update(val),
+            6 => self.reg6.update(val),
+            7 => self.reg7.update(val),
+            _ => (),
+        }
+    }
 }
