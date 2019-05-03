@@ -1,3 +1,10 @@
+//! This is documentation for the `tpa2016d2` module.
+//!
+//! When a new intance of `Tpa2016d2` is created the registers are setup
+//! with the default values from the TI data sheet.
+//!
+//! To sync it with the actual values from the device, do a `reg_reload`.
+
 #![no_std]
 #![allow(dead_code)]
 
@@ -6,6 +13,8 @@ use embedded_hal::blocking::i2c;
 mod regmap;
 use regmap::*;
 
+// The datasheet uses the adresses 0xB0 and 0xB1 for its examples
+// So it is defined like this for clarity.
 const TPA2016_I2C_ADDR: u8 = 0xB0 >> 1;
 
 /// Representation of a Texas Instruments TPA2016d2 audio amplifier
@@ -53,7 +62,7 @@ where
     }
 
     /// Read all registers of the device into our regmap
-    pub fn sync(&mut self) -> Result<(), E> {
+    pub fn reg_reload(&mut self) -> Result<(), E> {
         for i in 1..=7 {
             let val = self.read_reg(i)?;
             self.regmap.update_map(i, val);
@@ -79,6 +88,10 @@ where
     }
 
     pub fn get_faults(&mut self) -> Result<Faults, E> {
+        // Reload register
+        let val = self.read_reg(1)?;
+        self.regmap.update_map(1, val);
+
         Ok(Faults {
             fault_r: self.regmap.reg1.FAULT_R,
             fault_l: self.regmap.reg1.FAULT_L,
