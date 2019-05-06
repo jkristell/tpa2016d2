@@ -61,8 +61,8 @@ where
         Tpa2016d2 { i2c, regmap }
     }
 
-    /// Read all registers of the device into our regmap
-    pub fn reg_reload(&mut self) -> Result<(), E> {
+    /// Read all registers and update our view of the registers
+    pub fn sync(&mut self) -> Result<(), E> {
         for i in 1..=7 {
             let val = self.read_reg(i)?;
             self.regmap.update_map(i, val);
@@ -75,8 +75,8 @@ where
         self.i2c
     }
 
-    // Read register
-    pub fn read_device_reg(&mut self, idx: u8) -> Result<u8, E> {
+    // Get content of register i
+    pub fn device_reg(&mut self, idx: u8) -> Result<u8, E> {
         self.read_reg(idx)
     }
 
@@ -135,11 +135,6 @@ where
         let val = (ms / 164) as u8;
         self.regmap.hold_time.set(val);
         self.write_reg_idx(4)
-    }
-
-    pub fn set_fixed_gain(&mut self, db: u8) -> Result<(), E> {
-        self.regmap.fixedGain.set(db);
-        self.write_reg_idx(5)
     }
 
     pub fn noise_gate_threshold(&mut self, val: NoiseGateThreshold) -> Result<(), E> {
