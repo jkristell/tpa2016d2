@@ -77,7 +77,7 @@ where
 
     // Get content of register i
     pub fn device_reg(&mut self, idx: u8) -> Result<u8, E> {
-        self.read_reg(idx)
+        Ok(self.regmap.reg_as_byte(idx))
     }
 
     /// Enable or disable speakers
@@ -152,7 +152,7 @@ where
         self.write_reg_idx(7)
     }
 
-    fn write_reg_idx(&mut self, idx: usize) -> Result<(), E> {
+    fn write_reg_idx(&mut self, idx: u8) -> Result<(), E> {
         let b = self.regmap.reg_as_byte(idx);
         self.write_reg(idx as u8, b)
     }

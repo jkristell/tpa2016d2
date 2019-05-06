@@ -179,7 +179,7 @@ impl Default for RegisterMap {
 }
 
 impl RegisterMap {
-    pub fn reg_as_byte(&self, idx: usize) -> u8 {
+    pub fn reg_as_byte(&self, idx: u8) -> u8 {
         match idx {
             1 => self.reg1.as_byte(),
             2 => self.atk_time.as_byte(),
