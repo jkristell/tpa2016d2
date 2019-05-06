@@ -1,9 +1,4 @@
 //! This is documentation for the `tpa2016d2` module.
-//!
-//! When a new intance of `Tpa2016d2` is created the registers are setup
-//! with the default values from the TI data sheet.
-//!
-//! To sync it with the actual values from the device, do a `reg_reload`.
 
 #![no_std]
 #![allow(dead_code)]
