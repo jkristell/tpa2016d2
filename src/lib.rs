@@ -89,7 +89,7 @@ where
     pub fn speaker_enable(&mut self, le: bool, re: bool) -> Result<(), E> {
         self.regmap.reg1.SPK_EN_L = le;
         self.regmap.reg1.SPK_EN_R = re;
-        self.write_reg_idx(1)
+        self.write_regmap_reg(1)
     }
 
     pub fn get_faults(&mut self) -> Result<Faults, E> {
@@ -108,76 +108,84 @@ where
     /// Control, Bias and Oscillators are disabled
     pub fn disable_device(&mut self) -> Result<(), E> {
         self.regmap.reg1.SWS = true;
-        self.write_reg_idx(1)
+        self.write_regmap_reg(1)
     }
 
     pub fn noise_gate(&mut self, enable: bool) -> Result<(), E> {
         self.regmap.reg1.NG_EN = enable;
-        self.write_reg_idx(1)
+        self.write_regmap_reg(1)
+    }
+
+    pub fn set_attack_time(&mut self, val: u8) -> Result<(), E> {
+        self.regmap.atk_time.set(val);
+        self.write_regmap_reg(2)
+    }
+
+    /// Set release time / per 6 dB
+    pub fn set_release_time(&mut self, val: u8) -> Result<(), E> {
+        self.regmap.rel_time.set(val);
+        self.write_regmap_reg(3)
+    }
+
+    pub fn set_hold_time(&mut self, val: u8) -> Result<(), E> {
+        self.regmap.hold_time.set(val);
+        self.write_regmap_reg(4)
     }
 
     /// Set the gain
     pub fn gain(&mut self, gain: u8) -> Result<(), E> {
         self.regmap.fixedGain.set(gain);
-        self.write_reg_idx(5)
-    }
-
-    /// Set attack time / Per 6 dB
-    pub fn set_attack_time(&mut self, us: u16) -> Result<(), E> {
-        let regval = (us / 1280) as u8;
-        self.regmap.atk_time.set(regval);
-        self.write_reg_idx(2)
-    }
-
-    /// Set release time / per 6 dB
-    pub fn set_release_time(&mut self, ms: u16) -> Result<(), E> {
-        let regval = (ms / 164) as u8;
-        self.regmap.rel_time.set(regval);
-        self.write_reg_idx(3)
-    }
-
-    pub fn set_hold_time(&mut self, ms: u16) -> Result<(), E> {
-        let val = (ms / 164) as u8;
-        self.regmap.hold_time.set(val);
-        self.write_reg_idx(4)
+        self.write_regmap_reg(5)
     }
 
     pub fn noise_gate_threshold(&mut self, val: NoiseGateThreshold) -> Result<(), E> {
         self.regmap.reg6.noise_gate_threshold = val as u8;
-        self.write_reg_idx(6)
+        self.write_regmap_reg(6)
     }
 
     pub fn output_limiter_level(&mut self, val: u8) -> Result<(), E> {
         self.regmap.reg6.output_limiter_level = val;
-        self.write_reg_idx(6)
+        self.write_regmap_reg(6)
     }
 
     pub fn compression_ratio(&mut self, ratio: CompressionRatio) -> Result<(), E> {
         self.regmap.reg7.compression_ratio = ratio as u8;
-        self.write_reg_idx(7)
+        self.write_regmap_reg(7)
     }
 
-      pub fn set_agc(&mut self, preset: AgcPreset) -> Result<(), E> {
+    pub fn set_agc_preset(&mut self, preset: AgcPreset) -> Result<(), E> {
         use AgcPreset::*;
-        let (cr, atk, rel_time, hold_time, gain, limiter) = match preset {
-            Pop => {
-                (CompressionRatio::Ratio4, 1280, 986, 137, 6, 0b11_1100)
-                // 5:1, 1.28-3.84
-            },
-            _ => (CompressionRatio::Ratio2, 0, 0, 0, 0, 0),
-            /*
-            Classical => {},
-            Jazz => {},
-            Rap => {},
-            Rock => {},
-            Voice => {},
-            */
+        use CompressionRatio::*;
+
+        // From the data sheet
+        let (cr, atk, rel_time, hold_time, fixed_gain, limiter_level) = match preset {
+            Pop       => (Ratio4, 0b00_0010,  986, 137, 6, 0b11_1100),
+            Classical => (Ratio2, 0b00_0010, 1150, 137, 6, 0b11_1101),
+            Jazz      => (Ratio2, 0b00_0110, 3288,   0, 6, 0b11_1101),
+            Rap       => (Ratio4, 0b00_0010, 1640,   0, 6, 0b11_1100),
+            Rock      => (Ratio2, 0b00_0011, 4110,   0, 6, 0b11_1101),
+            Voice     => (Ratio4, 0b00_0010, 1640,   0, 6, 0b11_1110),
         };
+
+        let rel_time = release_time_to_u6(rel_time);
+        let hold_time = hold_time_to_u6(hold_time);
+
+        self.regmap.reg7.compression_ratio = cr as u8;
+        self.regmap.atk_time.set(atk);
+        self.regmap.rel_time.set(rel_time);
+        self.regmap.hold_time.set(hold_time);
+        self.regmap.fixedGain.set(fixed_gain);
+        self.regmap.reg6.output_limiter_level = limiter_level;
+
+        // Send the new settings to the device
+        for rid in 2..=7 {
+            self.write_regmap_reg(rid)?;
+        }
 
         Ok(())
     }
 
-    fn write_reg_idx(&mut self, idx: u8) -> Result<(), E> {
+    fn write_regmap_reg(&mut self, idx: u8) -> Result<(), E> {
         let b = self.regmap.reg_as_byte(idx);
         self.write_reg(idx as u8, b)
     }
@@ -200,9 +208,41 @@ where
     }
 }
 
+const fn release_time_to_u6(v: u32) -> u8 {
+    (v / 1644) as u8
+}
+
+const fn hold_time_to_u6(v: u32) -> u8 {
+    (v / 137) as u8
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn release_time_conv() {
+        let tests = [(1644, 0b00_0001),
+                     (4932, 0b00_0011),
+                     (103600, 0b11_1111)];
+        for &(input, bitval) in &tests {
+            let res = release_time_to_u6(input);
+            assert_eq!(res, bitval);
+        }
+    }
+
+    #[test]
+    fn hold_time_conv() {
+        let tests = [(137, 0b00_0001),
+            (0411, 0b00_0011),
+            (8631, 0b11_1111)];
+        for &(input, bitval) in &tests {
+            let res = hold_time_to_u6(input);
+            assert_eq!(res, bitval);
+        }
+
+    }
+
 
     #[test]
     fn test_register_defaults() {
