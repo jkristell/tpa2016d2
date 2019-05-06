@@ -159,12 +159,12 @@ where
 
         // From the data sheet
         let (cr, atk, rel_time, hold_time, fixed_gain, limiter_level) = match preset {
-            Pop       => (Ratio4, 0b00_0010,  986, 137, 6, 0b11_1100),
+            Pop => (Ratio4, 0b00_0010, 986, 137, 6, 0b11_1100),
             Classical => (Ratio2, 0b00_0010, 1150, 137, 6, 0b11_1101),
-            Jazz      => (Ratio2, 0b00_0110, 3288,   0, 6, 0b11_1101),
-            Rap       => (Ratio4, 0b00_0010, 1640,   0, 6, 0b11_1100),
-            Rock      => (Ratio2, 0b00_0011, 4110,   0, 6, 0b11_1101),
-            Voice     => (Ratio4, 0b00_0010, 1640,   0, 6, 0b11_1110),
+            Jazz => (Ratio2, 0b00_0110, 3288, 0, 6, 0b11_1101),
+            Rap => (Ratio4, 0b00_0010, 1640, 0, 6, 0b11_1100),
+            Rock => (Ratio2, 0b00_0011, 4110, 0, 6, 0b11_1101),
+            Voice => (Ratio4, 0b00_0010, 1640, 0, 6, 0b11_1110),
         };
 
         let rel_time = release_time_to_u6(rel_time);
@@ -222,9 +222,7 @@ mod tests {
 
     #[test]
     fn release_time_conv() {
-        let tests = [(1644, 0b00_0001),
-                     (4932, 0b00_0011),
-                     (103600, 0b11_1111)];
+        let tests = [(1644, 0b00_0001), (4932, 0b00_0011), (103600, 0b11_1111)];
         for &(input, bitval) in &tests {
             let res = release_time_to_u6(input);
             assert_eq!(res, bitval);
@@ -233,16 +231,12 @@ mod tests {
 
     #[test]
     fn hold_time_conv() {
-        let tests = [(137, 0b00_0001),
-            (0411, 0b00_0011),
-            (8631, 0b11_1111)];
+        let tests = [(137, 0b00_0001), (0411, 0b00_0011), (8631, 0b11_1111)];
         for &(input, bitval) in &tests {
             let res = hold_time_to_u6(input);
             assert_eq!(res, bitval);
         }
-
     }
-
 
     #[test]
     fn test_register_defaults() {
