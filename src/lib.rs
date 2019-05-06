@@ -1,3 +1,5 @@
+//! This is documentation for the `tpa2016d2` module.
+
 #![no_std]
 #![allow(dead_code)]
 
@@ -6,6 +8,8 @@ use embedded_hal::blocking::i2c;
 mod regmap;
 use regmap::*;
 
+// The datasheet uses the adresses 0xB0 and 0xB1 for its examples
+// So it is defined like this for clarity.
 const TPA2016_I2C_ADDR: u8 = 0xB0 >> 1;
 
 /// Representation of a Texas Instruments TPA2016d2 audio amplifier
@@ -52,28 +56,36 @@ where
         Tpa2016d2 { i2c, regmap }
     }
 
+    /// Read all registers and update our view of the registers
+    pub fn sync(&mut self) -> Result<(), E> {
+        for i in 1..=7 {
+            let val = self.read_reg(i)?;
+            self.regmap.update_map(i, val);
+        }
+        Ok(())
+    }
+
     /// Consume the device and release the i2c device
     pub fn release(self) -> I2C {
         self.i2c
     }
 
-    // Read register
-    pub fn read_device_reg(&mut self, idx: u8) -> Result<u8, E> {
-        self.read_reg(idx)
+    // Get content of register i
+    pub fn device_reg(&mut self, idx: u8) -> Result<u8, E> {
+        Ok(self.regmap.reg_as_byte(idx))
     }
 
     /// Enable or disable speakers
     pub fn speaker_enable(&mut self, le: bool, re: bool) -> Result<(), E> {
-        let cur = self.read_reg(1)?;
-        self.regmap.reg1.update(cur);
         self.regmap.reg1.SPK_EN_L = le;
         self.regmap.reg1.SPK_EN_R = re;
         self.write_reg_idx(1)
     }
 
     pub fn get_faults(&mut self) -> Result<Faults, E> {
-        let cur = self.read_reg(1)?;
-        self.regmap.reg1.update(cur);
+        // Reload register
+        let val = self.read_reg(1)?;
+        self.regmap.update_map(1, val);
 
         Ok(Faults {
             fault_r: self.regmap.reg1.FAULT_R,
@@ -85,15 +97,11 @@ where
     /// Shutdown the device
     /// Control, Bias and Oscillators are disabled
     pub fn disable_device(&mut self) -> Result<(), E> {
-        let cur = self.read_reg(1)?;
-        self.regmap.reg1.update(cur);
         self.regmap.reg1.SWS = true;
         self.write_reg_idx(1)
     }
 
     pub fn noise_gate(&mut self, enable: bool) -> Result<(), E> {
-        let cur = self.read_reg(1)?;
-        self.regmap.reg1.update(cur);
         self.regmap.reg1.NG_EN = enable;
         self.write_reg_idx(1)
     }
@@ -124,33 +132,22 @@ where
         self.write_reg_idx(4)
     }
 
-    pub fn set_fixed_gain(&mut self, db: u8) -> Result<(), E> {
-        self.regmap.fixedGain.set(db);
-        self.write_reg_idx(5)
-    }
-
     pub fn noise_gate_threshold(&mut self, val: NoiseGateThreshold) -> Result<(), E> {
-        let cur = self.read_reg(6)?;
-        self.regmap.reg6.update(cur);
         self.regmap.reg6.noise_gate_threshold = val as u8;
         self.write_reg_idx(6)
     }
 
     pub fn output_limiter_level(&mut self, val: u8) -> Result<(), E> {
-        let cur = self.read_reg(6)?;
-        self.regmap.reg6.update(cur);
         self.regmap.reg6.output_limiter_level = val;
         self.write_reg_idx(6)
     }
 
     pub fn compression_ratio(&mut self, ratio: CompressionRatio) -> Result<(), E> {
-        let cur = self.read_reg(7)?;
-        self.regmap.reg7.update(cur);
         self.regmap.reg7.compression_ratio = ratio as u8;
         self.write_reg_idx(7)
     }
 
-    fn write_reg_idx(&mut self, idx: usize) -> Result<(), E> {
+    fn write_reg_idx(&mut self, idx: u8) -> Result<(), E> {
         let b = self.regmap.reg_as_byte(idx);
         self.write_reg(idx as u8, b)
     }
