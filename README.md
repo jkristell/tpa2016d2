@@ -16,11 +16,7 @@ use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 use panic_semihosting as _;
 
-use nucleo_f401re as board;
-use board::hal::prelude::*;
-use board::hal::stm32;
-use board::hal::i2c::I2c;
-
+use nucleo_f401re::{i2c::I2c, prelude::*, stm32};
 use tpa2016d2::Tpa2016d2;
 
 #[entry]
@@ -32,12 +28,14 @@ fn main() -> ! {
     let clocks = rcc.cfgr.sysclk(84.mhz()).freeze();
 
     let gpiob = device.GPIOB.split();
-    let scl = gpiob.pb8
+    let scl = gpiob
+        .pb8
         .into_alternate_af4()
         .internal_pull_up(true)
         .set_open_drain();
 
-    let sda = gpiob.pb9
+    let sda = gpiob
+        .pb9
         .into_alternate_af4()
         .internal_pull_up(true)
         .set_open_drain();
@@ -46,20 +44,22 @@ fn main() -> ! {
 
     let mut tpa = Tpa2016d2::new(i2c);
 
-    // Print the registers
+    // Read all registers
+    tpa.sync().unwrap();
+
+    // Get and print  the registers
     for i in 1..=7 {
-        let v = tpa.read_device_reg(i).unwrap();
+        let v = tpa.device_reg(i).unwrap();
         hprintln!("{}: {}", i, v).unwrap();
     }
 
-    // Set the gain
+    // Update the gain
     tpa.gain(32).unwrap();
 
     // Should print 32
-    hprintln!("gain: {}", tpa.read_device_reg(5).unwrap()).unwrap();
+    hprintln!("gain: {}", tpa.device_reg(5).unwrap()).unwrap();
 
-    loop {
-    }
+    loop {}
 }
 ```
 
