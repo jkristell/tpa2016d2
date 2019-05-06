@@ -170,12 +170,12 @@ where
         let rel_time = release_time_to_u6(rel_time);
         let hold_time = hold_time_to_u6(hold_time);
 
-        self.regmap.reg7.compression_ratio = cr as u8;
         self.regmap.atk_time.set(atk);
         self.regmap.rel_time.set(rel_time);
         self.regmap.hold_time.set(hold_time);
         self.regmap.fixedGain.set(fixed_gain);
         self.regmap.reg6.output_limiter_level = limiter_level;
+        self.regmap.reg7.compression_ratio = cr as u8;
 
         // Send the new settings to the device
         for rid in 2..=7 {
@@ -187,7 +187,7 @@ where
 
     fn write_regmap_reg(&mut self, idx: u8) -> Result<(), E> {
         let b = self.regmap.reg_as_byte(idx);
-        self.write_reg(idx as u8, b)
+        self.write_reg(idx, b)
     }
 
     fn read_reg(&mut self, regidx: u8) -> Result<u8, E> {
